@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Care | Smart Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        
+        body {
+            display: flex;
+            background-color: #f4f7f6;
+            height: 100vh;
+            color: #2c3e50;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: #1a1a2e;
+            color: white;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 { color: #1abc9c; margin-bottom: 40px; text-align: center; font-size: 1.5rem; }
+        .sidebar ul { list-style: none; flex-grow: 1; }
+        .sidebar ul li {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .sidebar ul li a { text-decoration: none; color: #bdc3c7; display: block; }
+        .sidebar ul li.active, .sidebar ul li:hover { background: #16a085; color: white; }
+        .sidebar ul li.active a { color: white; font-weight: bold; }
+
+        .logout-section { border-top: 1px solid #34495e; padding-top: 20px; }
+        .logout-btn { color: #e74c3c; text-decoration: none; font-weight: bold; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-msg h1 { font-size: 1.8rem; }
+        .system-status {
+            background: #e8f8f0;
+            color: #27ae60;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        /* --- STATS CARDS --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+            border-bottom: 5px solid #1abc9c;
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card h3 { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; margin-bottom: 10px; }
+        .stat-card .value { font-size: 2.2rem; font-weight: bold; display: block; }
+        .stat-card .unit { font-size: 0.9rem; color: #95a5a6; }
+
+        /* --- AI ASSISTANT TOOL --- */
+        .ai-tool-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 8px solid #8e44ad;
+            margin-bottom: 30px;
+        }
+
+        .ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ai-header h2 { color: #8e44ad; font-size: 1.4rem; }
+        #ai-mode-status { font-size: 0.75rem; padding: 4px 10px; border-radius: 10px; background: #f3e5f5; color: #8e44ad; font-weight: bold; }
+
+        .ai-input-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .ai-input-box input {
+            flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 8px; outline: none; font-size: 1rem;
+        }
+        .ai-input-box input:focus { border-color: #8e44ad; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric-field label {
+            display: block;
+            font-size: 0.78rem;
+            color: #6c5a77;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .metric-field input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .metric-field input:focus {
+            border-color: #8e44ad;
+        }
+
+        .assistant-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sync-btn {
+            border: none;
+            background: #ece8ff;
+            color: #5b3f9e;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .sync-btn:hover {
+            background: #ddd3ff;
+        }
+
+        .analyze-btn {
+            background: #8e44ad; color: white; border: none; padding: 12px 25px; border-radius: 8px;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .analyze-btn:hover { background: #732d91; }
+
+        #ai-output {
+            display: none;
+            background: #f9f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dcd0ff;
+        }
+
+        .risk-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .risk-good {
+            background: #dff7e8;
+            color: #1f8b4c;
+            border: 1px solid #8fddb2;
+        }
+
+        .risk-bad {
+            background: #ffe4e4;
+            color: #c62828;
+            border: 1px solid #ffb7b7;
+        }
+
+        .analysis-source {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .solution-title { color: #27ae60; font-weight: bold; margin-top: 15px; display: block; }
+        .solution-list { margin-top: 10px; padding-left: 20px; line-height: 1.6; color: #34495e; }
+
+        /* --- EMERGENCY SOS --- */
+        .emergency-section {
+            background: #fff5f5;
+            border: 2px dashed #e74c3c;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sos-btn {
+            background: #e74c3c; color: white; border: none; padding: 12px 35px; border-radius: 30px;
+            font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s;
+        }
+        .sos-btn:hover { background: #c0392b; box-shadow: 0 0 15px rgba(231, 76, 60, 0.3); }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>AI Care</h2>
+        <ul>
+            <li class="active"><a href="#">🏠 Dashboard</a></li>
+            <li><a href="patient-info.html">👤 Patient Info</a></li>
+            <li><a href="navigation-logs.html">📡 Navigation</a></li>
+            <li><a href="emergency.html">⚙️ Settings</a></li>
+        </ul>
+        <div class="logout-section">
+            <a href="index.html" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div class="welcome-msg">
+                <h1 id="user-greeting">Welcome!</h1>
+                <p>AI-Monitoring system is active.</p>
+            </div>
+            <div class="system-status">● SYSTEM LIVE</div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card" style="border-color: #e74c3c;">
+                <h3>Heart Rate</h3>
+                <span class="value" id="live-bpm">72</span>
+                <span class="unit">BPM</span>
+            </div>
+            <div class="stat-card" style="border-color: #3498db;">
+                <h3>SpO2</h3>
+                <span class="value" id="live-spo2">98</span>
+                <span class="unit">% Oxygen</span>
+            </div>
+            <div class="stat-card" style="border-color: #f1c40f;">
+                <h3>Body Temp</h3>
+                <span class="value" id="live-temp">36.5</span>
+                <span class="unit">° Celsius</span>
+            </div>
+            <div class="stat-card" style="border-color: #27ae60;">
+                <h3>Battery</h3>
+                <span class="value" id="live-bat">88</span>
+                <span class="unit">% Charged</span>
+            </div>
+        </div>
+
+        <div class="ai-tool-container">
+            <div class="ai-header">
+                <h2>🩺 Smart Health Assistant</h2>
+                <span id="ai-mode-status">AI Ready</span>
+            </div>
+            <p style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px;">
+                Analyze risk using Heart Rate, Body Temperature, SpO2, Blood Oxygen Level, and Pulse Rate.
+            </p>
+
+            <div class="metrics-grid">
+                <div class="metric-field">
+                    <label for="heart-rate-input">Heart Rate (BPM)</label>
+                    <input type="number" id="heart-rate-input" min="20" max="220" step="1" value="72">
+                </div>
+                <div class="metric-field">
+                    <label for="body-temp-input">Body Temperature (°C)</label>
+                    <input type="number" id="body-temp-input" min="30" max="45" step="0.1" value="36.5">
+                </div>
+                <div class="metric-field">
+                    <label for="spo2-input">SpO2 (%)</label>
+                    <input type="number" id="spo2-input" min="50" max="100" step="1" value="98">
+                </div>
+                <div class="metric-field">
+                    <label for="blood-oxygen-input">Blood Oxygen Level (%)</label>
+                    <input type="number" id="blood-oxygen-input" min="50" max="100" step="1" value="98">
+                </div>
+                <div class="metric-field">
+                    <label for="pulse-rate-input">Pulse Rate (BPM)</label>
+                    <input type="number" id="pulse-rate-input" min="20" max="220" step="1" value="72">
+                </div>
+                <div class="metric-field">
+                    <label for="systolic-bp-input">Systolic BP (mmHg)</label>
+                    <input type="number" id="systolic-bp-input" min="50" max="250" step="1" value="120">
+                </div>
+                <div class="metric-field">
+                    <label for="diastolic-bp-input">Diastolic BP (mmHg)</label>
+                    <input type="number" id="diastolic-bp-input" min="30" max="150" step="1" value="80">
+                </div>
+            </div>
+
+            <div class="assistant-actions">
+                <button class="sync-btn" onclick="syncVitalsToInputs()">Use Live Sensor Values</button>
+            </div>
+            
+            <div class="ai-input-box">
+                <input type="text" id="ai-input" placeholder="Optional symptoms (e.g., dizzy, chest pain)">
+                <button class="analyze-btn" id="analyze-btn" onclick="runAIAnalysis()">Analyze Risk</button>
+            </div>
+
+            <div id="ai-output">
+                <p id="ai-analysis-text"></p>
+                <div class="risk-row">
+                    <span id="risk-badge" class="risk-badge risk-good">GOOD</span>
+                    <span id="analysis-source" class="analysis-source">Source: Local Analyzer</span>
+                </div>
+                <span class="solution-title">💡 Recommended Actions:</span>
+                <ul id="ai-solutions" class="solution-list"></ul>
+            </div>
+        </div>
+
+        <div class="emergency-section">
+            <div>
+                <h3 style="color: #c0392b;">Emergency Assistance</h3>
+                <p style="font-size: 0.9rem; color: #7f8c8d;">Notify Dr. Om Gunjal and Suyash immediately.</p>
+            </div>
+            <button class="sos-btn" onclick="sendSOS()">🚨 SEND SOS</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SESSION & LOGIN CHECK ---
+        window.onload = function() {
+            const user = sessionStorage.getItem("user");
+            if(!user) window.location.href = "index.html"; 
+            
+            const greeting = document.getElementById('user-greeting');
+            const welcomeInput = document.getElementById('ai-input');
+            
+            if(user === "herambpadhye@gmail.com") {
+                greeting.innerText = "Welcome, Heramb!";
+                welcomeInput.placeholder = "How are you feeling, Heramb?";
+            }
+            else if(user === "drom@gmail.com") greeting.innerText = "Welcome, Dr. Om!";
+            else if(user === "suyashshinde@gmail.com") greeting.innerText = "Welcome, Suyash!";
+
+            syncVitalsToInputs();
+        };
+
+        // --- 2. LIVE SENSOR SIMULATOR ---
+        setInterval(() => {
+            const bpm = Math.floor(Math.random() * (85 - 70 + 1) + 70);
+            document.getElementById('live-bpm').innerText = bpm;
+
+            const spo2 = Math.floor(Math.random() * (99 - 97 + 1) + 97);
+            document.getElementById('live-spo2').innerText = spo2;
+
+            const temp = (36.4 + Math.random() * 0.7).toFixed(1);
+            document.getElementById('live-temp').innerText = temp;
+
+            let currentBat = parseInt(document.getElementById('live-bat').innerText);
+            if (currentBat > 5 && Math.random() > 0.95) {
+                document.getElementById('live-bat').innerText = currentBat - 1;
+            }
+        }, 4000);
+
+        // --- 3.1 VITALS HELPERS ---
+        function syncVitalsToInputs() {
+            const liveHeartRate = Number(document.getElementById('live-bpm').innerText);
+            const liveSpO2 = Number(document.getElementById('live-spo2').innerText);
+            const liveTemp = Number(document.getElementById('live-temp').innerText);
+
+            document.getElementById('heart-rate-input').value = liveHeartRate;
+            document.getElementById('pulse-rate-input').value = liveHeartRate;
+            document.getElementById('spo2-input').value = liveSpO2;
+            document.getElementById('blood-oxygen-input').value = liveSpO2;
+            document.getElementById('body-temp-input').value = liveTemp;
+        }
+
+        function setAIMode(text, bgColor, textColor) {
+            const statusLabel = document.getElementById('ai-mode-status');
+            statusLabel.innerText = text;
+            statusLabel.style.background = bgColor;
+            statusLabel.style.color = textColor;
+        }
+
+        function collectVitals() {
+            return {
+                heartRate: Number(document.getElementById('heart-rate-input').value),
+                bodyTemperature: Number(document.getElementById('body-temp-input').value),
+                spo2: Number(document.getElementById('spo2-input').value),
+                bloodOxygenLevel: Number(document.getElementById('blood-oxygen-input').value),
+                pulseRate: Number(document.getElementById('pulse-rate-input').value),
+                systolicBP: Number(document.getElementById('systolic-bp-input').value),
+                diastolicBP: Number(document.getElementById('diastolic-bp-input').value)
+            };
+        }
+
+        function validateVitals(vitals) {
+            const checks = [
+                Number.isFinite(vitals.heartRate) && vitals.heartRate >= 20 && vitals.heartRate <= 220,
+                Number.isFinite(vitals.bodyTemperature) && vitals.bodyTemperature >= 30 && vitals.bodyTemperature <= 45,
+                Number.isFinite(vitals.spo2) && vitals.spo2 >= 50 && vitals.spo2 <= 100,
+                Number.isFinite(vitals.bloodOxygenLevel) && vitals.bloodOxygenLevel >= 50 && vitals.bloodOxygenLevel <= 100,
+                Number.isFinite(vitals.pulseRate) && vitals.pulseRate >= 20 && vitals.pulseRate <= 220,
+                Number.isFinite(vitals.systolicBP) && vitals.systolicBP >= 50 && vitals.systolicBP <= 250,
+                Number.isFinite(vitals.diastolicBP) && vitals.diastolicBP >= 30 && vitals.diastolicBP <= 150
+            ];
+
+            return checks.every(Boolean);
+        }
+
+        function getRuleBasedFallback(vitals, symptomText) {
+            const reasons = [];
+            const actions = [];
+            let riskLevel = "GOOD";
+
+            if (vitals.systolicBP > 140 || vitals.diastolicBP > 90) {
+                reasons.push("🚨 High Blood Pressure (Hypertension) detected.");
+                actions.push("Rest in a calm environment.", "Avoid salt and caffeine.", "Consult a doctor if BP stays high.");
+                riskLevel = "BAD";
+            } else if (vitals.systolicBP < 90 || vitals.diastolicBP < 60) {
+                reasons.push("⚠️ Low Blood Pressure (Hypotension) detected.");
+                actions.push("Drink plenty of water.", "Eat a small salty snack.", "Lie down and raise your legs.");
+                riskLevel = "BAD";
+            }
+
+            if (vitals.heartRate > 100) {
+                reasons.push("💓 High Heart Rate (Tachycardia) detected.");
+                actions.push("Sit down and take slow, deep breaths.", "Avoid stimulants like tea or coffee.", "Stay cool.");
+                riskLevel = "BAD";
+            } else if (vitals.heartRate < 60) {
+                reasons.push("🐢 Low Heart Rate (Bradycardia) detected.");
+                actions.push("Move your limbs slightly if possible.", "Check for dizziness or fainting.", "Stay warm.");
+                riskLevel = "BAD";
+            }
+
+            if (vitals.bodyTemperature > 37.5) {
+                reasons.push("🌡️ Fever (High Body Temperature) detected.");
+                actions.push("Stay hydrated with water or ORS.", "Use a cool damp cloth on forehead.", "Take rest.");
+                riskLevel = "BAD";
+            } else if (vitals.bodyTemperature < 35.0) {
+                reasons.push("❄️ Low Body Temperature (Hypothermia risk).");
+                actions.push("Wrap in warm blankets.", "Drink warm (not hot) liquids.", "Move to a warmer area.");
+                riskLevel = "BAD";
+            }
+
+            if (vitals.spo2 < 94 || vitals.bloodOxygenLevel < 94) {
+                reasons.push("🫁 Low Oxygen Level (Hypoxia risk).");
+                actions.push("Sit upright to help lung expansion.", "Practice deep breathing.", "Check if oxygen support is needed.");
+                riskLevel = "BAD";
+            }
+
+            const text = symptomText.toLowerCase();
+            if (text.includes("dry") || text.includes("thirsty") || text.includes("dehydration")) {
+                reasons.push("💧 Dehydration symptoms observed.");
+                actions.push("Drink small sips of water or ORS immediately.", "Avoid direct sun exposure.");
+                riskLevel = "BAD";
+            }
+            if (text.includes("seizure") || text.includes("fit") || text.includes("shaking")) {
+                reasons.push("🧠 Possible Seizure activity mentioned.");
+                actions.push("Clear the area around the patient.", "Protect the head from injury.", "Do not put anything in the mouth.");
+                riskLevel = "BAD";
+            }
+            if (text.includes("tired") || text.includes("fatigue") || text.includes("weak")) {
+                reasons.push("😴 High Fatigue levels reported.");
+                actions.push("Get at least 8 hours of sleep.", "Check nutritional intake.", "Avoid overexertion.");
+            }
+            if (text.includes("wound") || text.includes("bedsore") || text.includes("sore")) {
+                reasons.push("🩹 Bedsores / Pressure Wounds mentioned.");
+                actions.push("Change sitting/lying position every 2 hours.", "Use pressure-relieving cushions.");
+            }
+            if (text.includes("breath") || text.includes("chest") || text.includes("suffocation")) {
+                reasons.push("🌬️ Breathing Problem / Respiratory Distress.");
+                actions.push("Remain calm and sit upright.", "Loosen tight clothing.", "Use prescribed inhaler if available.");
+                riskLevel = "BAD";
+            }
+            if (text.includes("anxious") || text.includes("nervous") || text.includes("stress")) {
+                reasons.push("😟 Anxiety or high stress detected.");
+                actions.push("Try grounding 5-4-3-2-1 technique.", "Slow, rhythmic breathing.", "Listen to calming music.");
+            }
+            if (text.includes("sad") || text.includes("low") || text.includes("depression")) {
+                reasons.push("😔 Symptoms of Depression / Low Mood.");
+                actions.push("Share your feelings with a trusted person.", "Engage in a small physical activity.", "Seek professional counseling.");
+            }
+            if (text.includes("fall") || text.includes("unstable") || text.includes("dizzy")) {
+                reasons.push("⚠️ High Fall Risk detected.");
+                actions.push("Ensure wheelchair brakes are locked.", "Use the safety seatbelt.", "Ask for assistance while moving.");
+                riskLevel = "BAD";
+            }
+
+            const summary = riskLevel === "GOOD" && reasons.length === 0
+                ? "All vitals are normal. You are in good health!"
+                : "The system has detected potential health concerns that need attention.";
+
+            if (reasons.length === 0) {
+                reasons.push("All monitored parameters are within safe limits.");
+                actions.push("Continue regular hydration.", "Keep up with periodic vitals checks.");
+            }
+
+            return { riskLevel, summary, reasons, actions: [...new Set(actions)] };
+        }
+
+        function renderRiskOutput(result, source) {
+            const output = document.getElementById('ai-output');
+            const analysisText = document.getElementById('ai-analysis-text');
+            const solutionsList = document.getElementById('ai-solutions');
+            const riskBadge = document.getElementById('risk-badge');
+            const analysisSource = document.getElementById('analysis-source');
+
+            output.style.display = "block";
+            analysisText.innerHTML = `<strong>Risk Summary:</strong> ${result.summary}`;
+            riskBadge.innerText = result.riskLevel;
+            riskBadge.className = `risk-badge ${result.riskLevel === "GOOD" ? "risk-good" : "risk-bad"}`;
+            analysisSource.innerText = `Source: ${source}`;
+
+            const lines = [...(result.reasons || []), ...(result.actions || [])];
+            solutionsList.innerHTML = "";
+            lines.forEach((text) => {
+                const li = document.createElement("li");
+                li.innerText = text;
+                solutionsList.appendChild(li);
+            });
+
+            speakAnalysis(`Risk level ${result.riskLevel}. ${result.summary}`);
+        }
+
+        async function runAIAnalysis() {
+            const symptomText = document.getElementById('ai-input').value.toLowerCase().trim();
+            const vitals = collectVitals();
+            const output = document.getElementById('ai-output');
+            const analysisText = document.getElementById('ai-analysis-text');
+            const solutionsList = document.getElementById('ai-solutions');
+            const analyzeBtn = document.getElementById('analyze-btn');
+
+            if (!validateVitals(vitals)) {
+                output.style.display = "block";
+                analysisText.innerHTML = "<strong>Input Error:</strong> Please enter valid vitals before analysis.";
+                solutionsList.innerHTML = "<li>Check all numeric fields and try again.</li>";
+                setAIMode("Invalid Input", "#fff4e5", "#b45309");
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            setAIMode("Analyzing...", "#ede9fe", "#6d28d9");
+            output.style.display = "block";
+            analysisText.innerHTML = "<em>Analyzing health data localy...</em>";
+            solutionsList.innerHTML = "";
+
+            setTimeout(() => {
+                const result = getRuleBasedFallback(vitals, symptomText);
+                renderRiskOutput(result, "Integrated Health Analyzer");
+
+                if (result.riskLevel === "BAD") {
+                    setAIMode("Risk Alert", "#fee2e2", "#dc2626");
+                } else {
+                    setAIMode("System Ready", "#f3e5f5", "#8e44ad");
+                }
+                analyzeBtn.disabled = false;
+            }, 800);
+        }
+
+        function speakAnalysis(msg) {
+            window.speechSynthesis.cancel();
+            const speech = new SpeechSynthesisUtterance(msg);
+            speech.rate = 0.9;
+            window.speechSynthesis.speak(speech);
+        }
+
+        function sendSOS() {
+            const drOmNumber = "919373092004"; 
+            const bpm = document.getElementById('live-bpm').innerText;
+            const spo2 = document.getElementById('live-spo2').innerText;
+            const temp = document.getElementById('live-temp').innerText;
+        
+            const message = `🚨 *EMERGENCY SOS - AI CARE* 🚨%0A%0A` +
+                            `Patient: Heramb Padhye%0A` +
+                            `Pulse: *${bpm} BPM*%0A` +
+                            `Oxygen: *${spo2}%25*%0A` +
+                            `Temp: *${temp}°C*%0A%0A` +
+                            `*Assistance required at current GPS location!*`;
+        
+            const whatsappUrl = `https://web.whatsapp.com/send?phone=${drOmNumber}&text=${message}`;
+            alert("🚨 SOS Initiated! Opening WhatsApp Web...");
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
